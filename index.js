@@ -5,11 +5,15 @@ app.set('port', (process.env.PORT || 5000));
 
 /*
 1. get a random beer
-2. get a list of beers that are of a strong abv
-3. get a list of beers that were brewed before a date
-4. get a list of beers that match a specified food string
-5. get a single beer using the beers id (or a list of beers matching the inputted name)
-other option: find max or minds in the data or search based on name
+
+2. get a list of beers that are of an abv greater than (abv_gt X)
+
+3. get a list of beers that were brewed before a date (brewed_before XX/XX)
+
+4. get a list of beers that match a specified name (beer_name)
+
+5. get a single beer using the beers id (ids)
+
  */
 
 class Beer {//class for the sake of 2 class requirement, the api offers more data if needed
