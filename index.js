@@ -4,15 +4,20 @@ let app = express();
 app.set('port', (process.env.PORT || 5000));
 
 /*
-1. get a random beer
+1. Retrieve, add, and update a beer and its data
+    GET, PUT, POST, DELETE /beer/:beerId
 
-2. get a list of beers that are of an abv greater than (abv_gt X)
+2. Get or update the abv content of a beer
+    GET, PUT /beer/:beerId/abv
 
-3. get a list of beers that were brewed before a date (brewed_before XX/XX)
+3. Get the list of beers that are strong (abv > 6.0)
+    GET /strongBeers
 
-4. get a list of beers that match a specified name (beer_name)
+4. Get a list of beers that are of an ibu greater than (ibu_gt X)
+    GET /beer/ibu_gt/:ibu
 
-5. get a single beer using the beers id (ids)
+5. Get a list of beers that were brewed before a date (brewed_before XX/XX)
+    GET /beer/brewed_before/:firstBrewed
 
  */
 
