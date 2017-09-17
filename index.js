@@ -48,6 +48,11 @@ app.get('/', function(request, response) {
 //Scenario 1
 app.post('/beer/:beerId', function (request, response) {//adds new beer to end of array
     let beerId = Number(request.params.beerId);
+    if(beerId >= beerArray.length){
+        response.send("ID out of range");
+        return;
+    }
+
     let name = prompt("Enter Beer Name", "");
     let first_brewed = prompt("First time it was brewed?(MM/YYYY)", "");
     let abv = prompt("ABV", "");
@@ -60,6 +65,11 @@ app.post('/beer/:beerId', function (request, response) {//adds new beer to end o
 
 app.put('/beer/:beerId', function (request, response) {//allow all beer data for given id to be modified
     let beerId = Number(request.params.beerId);
+    if(beerId >= beerArray.length){
+        response.send("ID out of range");
+        return;
+    }
+
     let name = prompt("Enter Beer Name", "");
     let first_brewed = prompt("First time it was brewed?(MM/YYYY)", "");
     let abv = prompt("ABV", "");
@@ -71,7 +81,12 @@ app.put('/beer/:beerId', function (request, response) {//allow all beer data for
 
 app.delete('/beer/:beerId', function (request, response) {//remove selected beer
     let beerId = Number(request.params.beerId);
-    beerArray[beerId] = null;//delete beer
+    if(beerId >= beerArray.length){
+        response.send("ID out of range");
+        return;
+    }
+
+    beerArray.splice(beerId,1);//delete beer
 
     response.send(beerArray[beerId]);
 });
@@ -85,7 +100,10 @@ app.get('/beer/:beerId', function(request, response){
             beerToReturn = beer;
         }
     });
-
+    if(beerToReturn == null){
+        response.send("ID out of range");
+        return;
+    }
     response.send({beer: beerToReturn});
 });
 
@@ -99,7 +117,10 @@ app.get('/beer/:beerId/abv', function(request, response){
             abvToReturn = abv;
         }
     });
-
+    if(abvToReturn == null){
+        response.send("ID out of range");
+        return;
+    }
     response.send({abv: abvToReturn.abv});
 });
 
