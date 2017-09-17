@@ -48,6 +48,7 @@ app.get('/', function(request, response) {
     response.send(beerArray)
 });
 
+//Scenario 1
 app.get('/beer/:beerId', function(request, response){
     let beerId = Number(request.params.beerId);
     let beerToReturn = null;
@@ -60,6 +61,37 @@ app.get('/beer/:beerId', function(request, response){
 
     response.send({beer: beerToReturn});
 });
+
+
+//Scenario 2
+app.get('/beer/:beerId/abv', function(request, response){
+    let beerId = Number(request.params.beerId);
+    let abvToReturn = null;
+
+    beerArray.map(function(abv) {
+        if(abv.id === beerId){
+            abvToReturn = abv;
+        }
+    });
+
+    response.send({abv: abvToReturn.abv});
+});
+
+//Scenario 2 - still figuring out put requests
+/*
+app.put('/beer/:beerId/abv', function(request, response){
+    let beerId = Number(request.params.beerId);
+    let abvToReturn = null;
+
+    beerArray.map(function(abv) {
+        if(abv.id === beerId){
+            abvToReturn = abv;
+        }
+    });
+
+    response.send({abv: abvToReturn.abv});
+});
+*/
 
 app.listen(app.get('port'), function() {
     console.log('Node app is running on port', app.get('port'));
