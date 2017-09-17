@@ -14,7 +14,7 @@ app.set('port', (process.env.PORT || 5000));
     GET /strongBeers
 4. Get a list of beers that are of an ibu greater than (ibu_gt X)
     GET /beer/ibu_gt/:ibu
-5. Get a list of beers that were brewed before a date (brewed_before XX/XX)
+5. Get a list of beers that were brewed before a date (brewed_before XX-XXXX)
     GET /beer/brewed_before/:firstBrewed
  */
 
@@ -79,12 +79,7 @@ app.delete('/beer/:beerId', function (request, response) {//remove selected beer
 app.get('/beer/:beerId', function(request, response){
     let beerId = Number(request.params.beerId);
     let beerToReturn = null;
-
-    beerArray.map(function(beer) {
-        if(beer.id === beerId){
-            beerToReturn = beer;
-        }
-    });
+    beerArray.map((beer) => {beer.id === beerId ? beerToReturn = beer : false;});
 
     response.send({beer: beerToReturn});
 });
@@ -93,12 +88,7 @@ app.get('/beer/:beerId', function(request, response){
 app.get('/beer/:beerId/abv', function(request, response){
     let beerId = Number(request.params.beerId);
     let abvToReturn = null;
-
-    beerArray.map(function(abv) {
-        if(abv.id === beerId){
-            abvToReturn = abv;
-        }
-    });
+    beerArray.map((abv) => {abv.id === beerId ? abvToReturn = abv : false;});
 
     response.send({abv: abvToReturn.abv});
 });
@@ -116,6 +106,43 @@ app.put('/beer/:beerId/abv', function(request, response){
     response.send({abv: abvToReturn.abv});
 });
 */
+
+//Scenario 3
+app.get('/strongBeers', function(request, response){
+    var strongBeerArray = beerArray.filter((beer) => beer.abv >= 7.0);
+    response.send(strongBeerArray);
+});
+
+//Scenario 4
+app.get('/beer/ibu_gt/:ibu', function(request, response){
+    let beerIbu = Number(request.params.ibu);
+    var newBeerArray = beerArray.filter(beer => beer.ibu >= beerIbu);
+    response.send(newBeerArray);
+});
+
+//Scenario 5
+app.get('/beer/brewed_before/:firstBrewed', function(request, response){
+    try{
+        if(request.params.firstBrewed.length!=6) throw "Invalid Date Format";
+        let monthString = request.params.firstBrewed.substring(0, 2);
+        if(monthString.charAt(0) === '0') monthString = monthString.substring(1);
+        let month = Number(monthString);
+        month--;
+        let year = Number(request.params.firstBrewed.substring(2));
+
+        console.log(monthString);
+        console.log(month);
+        console.log(year);
+        let beerDate = new Date(year, month, 01);
+        console.log(beerDate);
+        var newBeerArray = beerArray.filter(beer => beer.firstBrewed < beerDate);
+
+        response.send(newBeerArray);
+    }
+    catch(e){
+        response.send("Date must be in the format: MMYYYY")
+    }
+});
 
 app.listen(app.get('port'), function() {
     console.log('Node app is running on port', app.get('port'));
