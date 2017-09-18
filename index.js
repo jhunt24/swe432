@@ -1,8 +1,6 @@
 let express = require('express');
 let app = express();
-/*const bodyParser = require('body-parser');
-app.use(bodyParser.json());
-app.use(bodyParser.urlencoded({ extended: true }));*/
+
 app.set('port', (process.env.PORT || 5000));
 
 /*
@@ -14,17 +12,26 @@ app.set('port', (process.env.PORT || 5000));
     GET /strongBeers
 4. Get a list of beers that are of an ibu greater than (ibu_gt X)
     GET /beer/ibu_gt/:ibu
-5. Get a list of beers that were brewed before a date (brewed_before XX-XXXX)
-    GET /beer/brewed_before/:firstBrewed
+5. Get a list of beers that include the specified hop searched for
+    GET /beer/hops/:hopName
+6. Get a list of beers that match the supplied name
+    GET /beer/name/:beerName
  */
 
-class Beer {//class for the sake of 2 class requirement, the api offers more data if needed
-    constructor(name, id, firstBrewed, abv, ibu) {
+class Hop {
+    constructor(name, attribute) {
+        this.name = name;
+        this.attribute = attribute;
+    }
+}
+
+class Beer {//Beer class
+    constructor(name, id, abv, ibu, hops) {
         this.name = name;
         this.id = id - 1;//so array and id numbers match
-        this.firstBrewed = firstBrewed;
         this.abv = abv;
         this.ibu = ibu;
+        this.hops =  hops;
     }
 }
 let beerArray = [];//store Beer class here
@@ -37,7 +44,11 @@ fetch('https://api.punkapi.com/v2/beers?page=1&per_page=80')//api seems to limit
         return res.json();
     }).then(function(json) {
     for(let i in json){
-        beerArray[i] = new Beer(json[i].name, json[i].id, json[i].first_brewed, json[i].abv, json[i].ibu);
+        let newHops = [];
+        for(let h in json[i].ingredients.hops){
+            newHops[h] = new Hop(json[i].ingredients.hops[h].name, json[i].ingredients.hops[h].attribute);
+        }
+        beerArray[i] = new Beer(json[i].name, json[i].id, json[i].abv, json[i].ibu, newHops);
     }
 });
 
@@ -46,49 +57,66 @@ app.get('/', function(request, response) {
 });
 
 //Scenario 1
-app.post('/beer/:beerId', function (request, response) {//adds new beer to end of array
+app.post('/beer/:beerId/:beerName/:abv/:ibu/:hopName/:hopAtr', function (request, response) {//adds new beer to end of array
     let beerId = Number(request.params.beerId);
-    if(beerId >= beerArray.length || beerId < 0){
-        response.send("ID out of range");
+    beerArray.map(function(beer) {
+        if (beer.id === beerId) {
+            response.send("ID already exists");
+            return;
+        }
+    });
+    let beerName = String(request.params.beerName);
+    let abv = Number(request.params.abv);
+    let ibu = Number(request.params.ibu);
+    let hopName = String(request.params.hopName);
+    let hopAtr = Number(request.params.hopAtr);
+    let newHops = [];
+    newHops[0] = new Hop(hopName, hopAtr);
+    let beerArrayIndex = beerArray.length;//index for end of array
+    beerArray[beerArrayIndex] = new Beer(beerName, beerId +1, abv, ibu, newHops);//store new beer at the end
+
+    response.send(beerArray);
+});
+
+app.put('/beer/:beerId/:beerName/:abv/:ibu/:hopName/:hopAtr', function (request, response) {//allow all beer data for given id to be modified
+    let beerId = Number(request.params.beerId);
+    for(let i in beerArray){
+        if(beerId === beerArray[i].id){
+            var beerArrayIndex = i;
+        }
+    }
+    if(!beerArrayIndex){
+        response.send("ID not found");
         return;
     }
 
-    let name = prompt("Enter Beer Name", "");
-    let first_brewed = prompt("First time it was brewed?(MM/YYYY)", "");
-    let abv = prompt("ABV", "");
-    let ibu = prompt("IBU", "");
-    beerArrayIndex = beerArray.length;//index for end of array
-    beerArray[beerArrayIndex] = new Beer(name, beerId, first_brewed, abv, ibu);//store new beer at the end
+    let beerName = String(request.params.beerName);
+    let abv = Number(request.params.abv);
+    let ibu = Number(request.params.ibu);
+    let hopName = String(request.params.hopName);
+    let hopAtr = Number(request.params.hopAtr);
+    let newHops = [];
+    newHops[0] = new Hop(hopName, hopAtr);
+    beerArray[beerArrayIndex] = new Beer(beerName, beerId +1, abv, ibu, newHops);//replace old beer with new data
 
     response.send(beerArray[beerArrayIndex]);
 });
 
-app.put('/beer/:beerId', function (request, response) {//allow all beer data for given id to be modified
-    let beerId = Number(request.params.beerId);
-    if(beerId >= beerArray.length || beerId < 0){
-        response.send("ID out of range");
-        return;
-    }
-
-    let name = prompt("Enter Beer Name", "");
-    let first_brewed = prompt("First time it was brewed?(MM/YYYY)", "");
-    let abv = prompt("ABV", "");
-    let ibu = prompt("IBU", "");
-    beerArray[beerId] = new Beer(name, beerId, first_brewed, abv, ibu);//replace old beer with new data
-
-    response.send(beerArray[beerId]);
-});
-
 app.delete('/beer/:beerId', function (request, response) {//remove selected beer
     let beerId = Number(request.params.beerId);
-    if(beerId >= beerArray.length || beerId < 0){
-        response.send("ID out of range");
+    for(let i in beerArray){
+        if(beerId === beerArray[i].id){
+            var beerArrayIndex = i;
+        }
+    }
+    if(!beerArrayIndex){
+        response.send("ID not found");
         return;
     }
 
-    beerArray.splice(beerId,1);//delete beer
+    beerArray.splice(beerArrayIndex,1);//delete beer
 
-    response.send(beerArray[beerId]);
+    response.send(beerArray);
 });
 
 app.get('/beer/:beerId', function(request, response){
@@ -121,57 +149,79 @@ app.get('/beer/:beerId/abv', function(request, response){
         response.send("ID out of range");
         return;
     }
-    response.send({abv: abvToReturn.abv});
+    response.send({abv: abvToReturn.abv});//{"abv":4.5}
 });
 
-app.put('/beer/:beerId/abv', function(request, response){
+app.put('/beer/:beerId/abv/:newAbv', function(request, response){
     let beerId = Number(request.params.beerId);
-    if(beerId >= beerArray.length || beerId < 0){
-        response.send("ID out of range");
+    for(let i in beerArray){
+        if(beerId === beerArray[i].id){
+            var beerArrayIndex = i;
+        }
+    }
+    if(!beerArrayIndex){
+        response.send("ID not found");
         return;
     }
-    
-    let abv = prompt("ABV", "");//user sets new abv
-    beerArray[beerId].abv = abv;//set abv to user input
-    response.send(beerArray[beerId]);
+
+    let abv = Number(request.params.newAbv);//user sets new abv
+    beerArray[beerArrayIndex].abv = abv;//set abv to user input
+    response.send(beerArray[beerArrayIndex]);
 });
 
 
 //Scenario 3
 app.get('/strongBeers', function(request, response){
     var strongBeerArray = beerArray.filter((beer) => beer.abv >= 7.0);
+    if(strongBeerArray.length === 0) {
+        response.send("There are no beers that have an ABV of 7.0 or greater.");
+        return;
+    }
     response.send(strongBeerArray);
 });
 
 //Scenario 4
 app.get('/beer/ibu_gt/:ibu', function(request, response){
     let beerIbu = Number(request.params.ibu);
-    var newBeerArray = beerArray.filter(beer => beer.ibu >= beerIbu);
+    var newBeerArray = beerArray.filter(beer => beer.ibu > beerIbu);
+    if(newBeerArray.length === 0) {
+        response.send("There are no beers with an IBU greater than " + beerIbu + ".");
+        return;
+    }
     response.send(newBeerArray);
 });
 
 //Scenario 5
-app.get('/beer/brewed_before/:firstBrewed', function(request, response){
-    try{
-        if(request.params.firstBrewed.length!=6) throw "Invalid Date Format";
-        let monthString = request.params.firstBrewed.substring(0, 2);
-        if(monthString.charAt(0) === '0') monthString = monthString.substring(1);
-        let month = Number(monthString);
-        month--;
-        let year = Number(request.params.firstBrewed.substring(2));
-
-        console.log(monthString);
-        console.log(month);
-        console.log(year);
-        let beerDate = new Date(year, month, 01);
-        console.log(beerDate);
-        var newBeerArray = beerArray.filter(beer => beer.firstBrewed < beerDate);
-
-        response.send(newBeerArray);
+app.get('/beer/hops/:hopName', function(request, response){
+    let beerHop = request.params.hopName;
+    var newBeerArray = [];
+    var ctr = 0;
+    for(let beer in beerArray) {
+        for(let i in beerArray[beer].hops) {
+            if(beerArray[beer].hops[i].name.includes(beerHop)){
+                newBeerArray[ctr] = beerArray[beer];
+                ctr++;
+                break;
+            }
+        }
     }
-    catch(e){
-        response.send("Date must be in the format: MMYYYY")
+
+    if(newBeerArray.length === 0) {
+        response.send("There are no beers that contain hops that contain '" + beerHop + "' in their name. (CASE SENSITIVE)");
+        return;
     }
+    response.send(newBeerArray);
+})
+
+//Scenario 6 (extra)
+app.get('/beer/name/:beerName', function(request, response){
+    let beerName = request.params.beerName;
+    var newBeerArray = beerArray.filter(beer => beer.name.includes(beerName));
+    if(newBeerArray.length === 0){
+        response.send("There are no beers that contain '" + beerName + "' in their name. (CASE SENSITIVE)");
+        return;
+    }
+    response.send(newBeerArray);
 });
 
 app.listen(app.get('port'), function() {
