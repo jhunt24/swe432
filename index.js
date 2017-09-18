@@ -14,15 +14,14 @@ app.set('port', (process.env.PORT || 5000));
     GET /strongBeers
 4. Get a list of beers that are of an ibu greater than (ibu_gt X)
     GET /beer/ibu_gt/:ibu
-5. Get a list of beers that were brewed before a date (brewed_before XX-XXXX)
-    GET /beer/brewed_before/:firstBrewed
+5. Get a list of beers that match the supplied name
+    GET /beer/name/:beerName
  */
 
 class Beer {//class for the sake of 2 class requirement, the api offers more data if needed
-    constructor(name, id, firstBrewed, abv, ibu) {
+    constructor(name, id, abv, ibu) {
         this.name = name;
         this.id = id - 1;//so array and id numbers match
-        this.firstBrewed = firstBrewed;
         this.abv = abv;
         this.ibu = ibu;
     }
@@ -37,7 +36,7 @@ fetch('https://api.punkapi.com/v2/beers?page=1&per_page=80')//api seems to limit
         return res.json();
     }).then(function(json) {
     for(let i in json){
-        beerArray[i] = new Beer(json[i].name, json[i].id, json[i].first_brewed, json[i].abv, json[i].ibu);
+        beerArray[i] = new Beer(json[i].name, json[i].id, json[i].abv, json[i].ibu);
     }
 });
 
@@ -54,11 +53,10 @@ app.post('/beer/:beerId', function (request, response) {//adds new beer to end o
     }
 
     let name = prompt("Enter Beer Name", "");
-    let first_brewed = prompt("First time it was brewed?(MM/YYYY)", "");
     let abv = prompt("ABV", "");
     let ibu = prompt("IBU", "");
     beerArrayIndex = beerArray.length;//index for end of array
-    beerArray[beerArrayIndex] = new Beer(name, beerId, first_brewed, abv, ibu);//store new beer at the end
+    beerArray[beerArrayIndex] = new Beer(name, beerId, abv, ibu);//store new beer at the end
 
     response.send(beerArray[beerArrayIndex]);
 });
@@ -71,10 +69,9 @@ app.put('/beer/:beerId', function (request, response) {//allow all beer data for
     }
 
     let name = prompt("Enter Beer Name", "");
-    let first_brewed = prompt("First time it was brewed?(MM/YYYY)", "");
     let abv = prompt("ABV", "");
     let ibu = prompt("IBU", "");
-    beerArray[beerId] = new Beer(name, beerId, first_brewed, abv, ibu);//replace old beer with new data
+    beerArray[beerId] = new Beer(name, beerId, abv, ibu);//replace old beer with new data
 
     response.send(beerArray[beerId]);
 });
@@ -151,27 +148,10 @@ app.get('/beer/ibu_gt/:ibu', function(request, response){
 });
 
 //Scenario 5
-app.get('/beer/brewed_before/:firstBrewed', function(request, response){
-    try{
-        if(request.params.firstBrewed.length!=6) throw "Invalid Date Format";
-        let monthString = request.params.firstBrewed.substring(0, 2);
-        if(monthString.charAt(0) === '0') monthString = monthString.substring(1);
-        let month = Number(monthString);
-        month--;
-        let year = Number(request.params.firstBrewed.substring(2));
-
-        console.log(monthString);
-        console.log(month);
-        console.log(year);
-        let beerDate = new Date(year, month, 01);
-        console.log(beerDate);
-        var newBeerArray = beerArray.filter(beer => beer.firstBrewed < beerDate);
-
-        response.send(newBeerArray);
-    }
-    catch(e){
-        response.send("Date must be in the format: MMYYYY")
-    }
+app.get('/beer/name/:beerName', function(request, response){
+    let beerName = request.params.beerName;
+    var newBeerArray = beerArray.filter(beer => beer.name.includes(beerName));
+    response.send(newBeerArray);
 });
 
 app.listen(app.get('port'), function() {
