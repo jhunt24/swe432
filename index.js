@@ -48,7 +48,7 @@ app.get('/', function(request, response) {
 //Scenario 1
 app.post('/beer/:beerId', function (request, response) {//adds new beer to end of array
     let beerId = Number(request.params.beerId);
-    if(beerId >= beerArray.length){
+    if(beerId >= beerArray.length || beerId < 0){
         response.send("ID out of range");
         return;
     }
@@ -65,7 +65,7 @@ app.post('/beer/:beerId', function (request, response) {//adds new beer to end o
 
 app.put('/beer/:beerId', function (request, response) {//allow all beer data for given id to be modified
     let beerId = Number(request.params.beerId);
-    if(beerId >= beerArray.length){
+    if(beerId >= beerArray.length || beerId < 0){
         response.send("ID out of range");
         return;
     }
@@ -81,7 +81,7 @@ app.put('/beer/:beerId', function (request, response) {//allow all beer data for
 
 app.delete('/beer/:beerId', function (request, response) {//remove selected beer
     let beerId = Number(request.params.beerId);
-    if(beerId >= beerArray.length){
+    if(beerId >= beerArray.length || beerId < 0){
         response.send("ID out of range");
         return;
     }
@@ -126,6 +126,11 @@ app.get('/beer/:beerId/abv', function(request, response){
 
 app.put('/beer/:beerId/abv', function(request, response){
     let beerId = Number(request.params.beerId);
+    if(beerId >= beerArray.length || beerId < 0){
+        response.send("ID out of range");
+        return;
+    }
+    
     let abv = prompt("ABV", "");//user sets new abv
     beerArray[beerId].abv = abv;//set abv to user input
     response.send(beerArray[beerId]);
