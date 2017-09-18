@@ -124,19 +124,13 @@ app.get('/beer/:beerId/abv', function(request, response){
     response.send({abv: abvToReturn.abv});
 });
 
-//Scenario 2 - still figuring out put requests
-/*
 app.put('/beer/:beerId/abv', function(request, response){
     let beerId = Number(request.params.beerId);
-    let abvToReturn = null;
-    beerArray.map(function(abv) {
-        if(abv.id === beerId){
-            abvToReturn = abv;
-        }
-    });
-    response.send({abv: abvToReturn.abv});
+    let abv = prompt("ABV", "");//user sets new abv
+    beerArray[beerId].abv = abv;//set abv to user input
+    response.send(beerArray[beerId]);
 });
-*/
+
 
 //Scenario 3
 app.get('/strongBeers', function(request, response){
