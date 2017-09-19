@@ -61,7 +61,7 @@ app.post('/beer/:beerId/:beerName/:abv/:ibu/:hopName/:hopAtr', function (request
     let beerId = Number(request.params.beerId);
     beerArray.map(function(beer) {
         if (beer.id === beerId) {
-            response.send("ID already exists");
+            response.status(400).send("ID already exists");
             return;
         }
     });
@@ -86,7 +86,7 @@ app.put('/beer/:beerId/:beerName/:abv/:ibu/:hopName/:hopAtr', function (request,
         }
     }
     if(!beerArrayIndex){
-        response.send("ID not found");
+        response.status(404).send("ID not found");
         return;
     }
 
@@ -110,7 +110,7 @@ app.delete('/beer/:beerId', function (request, response) {//remove selected beer
         }
     }
     if(!beerArrayIndex){
-        response.send("ID not found");
+        response.status(404).send("ID not found");
         return;
     }
 
@@ -123,13 +123,13 @@ app.get('/beer/:beerId', function(request, response){
     let beerId = Number(request.params.beerId);
     let beerToReturn = null;
 
-    beerArray.map(function(beer) {
+    beerArray.map(function(beer) { //search through beerArray for matching id
         if(beer.id === beerId){
             beerToReturn = beer;
         }
     });
     if(beerToReturn == null){
-        response.send("ID out of range");
+        response.status(404).send("ID out of range");
         return;
     }
     response.send({beer: beerToReturn});
@@ -140,13 +140,13 @@ app.get('/beer/:beerId/abv', function(request, response){
     let beerId = Number(request.params.beerId);
     let abvToReturn = null;
 
-    beerArray.map(function(abv) {
+    beerArray.map(function(abv) { //search through beerArray for matching id, then return abv
         if(abv.id === beerId){
             abvToReturn = abv;
         }
     });
     if(abvToReturn == null){
-        response.send("ID out of range");
+        response.status(404).send("ID out of range");
         return;
     }
     response.send({abv: abvToReturn.abv});//{"abv":4.5}
@@ -160,7 +160,7 @@ app.put('/beer/:beerId/abv/:newAbv', function(request, response){
         }
     }
     if(!beerArrayIndex){
-        response.send("ID not found");
+        response.status(404).send("ID not found");
         return;
     }
 
@@ -172,7 +172,7 @@ app.put('/beer/:beerId/abv/:newAbv', function(request, response){
 
 //Scenario 3
 app.get('/strongBeers', function(request, response){
-    var strongBeerArray = beerArray.filter((beer) => beer.abv >= 7.0);
+    var strongBeerArray = beerArray.filter((beer) => beer.abv >= 7.0); //filter only beers from beerArray with abv>=7
     if(strongBeerArray.length === 0) {
         response.send("There are no beers that have an ABV of 7.0 or greater.");
         return;
@@ -183,7 +183,7 @@ app.get('/strongBeers', function(request, response){
 //Scenario 4
 app.get('/beer/ibu_gt/:ibu', function(request, response){
     let beerIbu = Number(request.params.ibu);
-    var newBeerArray = beerArray.filter(beer => beer.ibu > beerIbu);
+    var newBeerArray = beerArray.filter(beer => beer.ibu > beerIbu); //filter only beers from beerArray with an ibu > input
     if(newBeerArray.length === 0) {
         response.send("There are no beers with an IBU greater than " + beerIbu + ".");
         return;
@@ -196,12 +196,12 @@ app.get('/beer/hops/:hopName', function(request, response){
     let beerHop = request.params.hopName;
     var newBeerArray = [];
     var ctr = 0;
-    for(let beer in beerArray) {
-        for(let i in beerArray[beer].hops) {
-            if(beerArray[beer].hops[i].name.includes(beerHop)){
+    for(let beer in beerArray) { //loop through each beer in beerArray
+        for(let i in beerArray[beer].hops) { //loop through each hop in the current beer
+            if(beerArray[beer].hops[i].name.includes(beerHop)){ //if the current hop's name includes the input string, add the beer to the response
                 newBeerArray[ctr] = beerArray[beer];
                 ctr++;
-                break;
+                break; //make sure each beer is only added once to the response
             }
         }
     }
@@ -216,7 +216,7 @@ app.get('/beer/hops/:hopName', function(request, response){
 //Scenario 6 (extra)
 app.get('/beer/name/:beerName', function(request, response){
     let beerName = request.params.beerName;
-    var newBeerArray = beerArray.filter(beer => beer.name.includes(beerName));
+    var newBeerArray = beerArray.filter(beer => beer.name.includes(beerName)); //filter only beers from beerArray whose name includes the input string
     if(newBeerArray.length === 0){
         response.send("There are no beers that contain '" + beerName + "' in their name. (CASE SENSITIVE)");
         return;
