@@ -16,6 +16,8 @@ app.set('port', (process.env.PORT || 5000));
     GET /beer/hops/:hopName
 6. Get a list of beers that match the supplied name
     GET /beer/name/:beerName
+7. Get a sort list of beers currently stored
+    GET /beer/sorted
  */
 
 class Hop {
@@ -213,7 +215,7 @@ app.get('/beer/hops/:hopName', function(request, response){
     response.send(newBeerArray);
 })
 
-//Scenario 6 (extra)
+//Scenario 6
 app.get('/beer/name/:beerName', function(request, response){
     let beerName = request.params.beerName;
     var newBeerArray = beerArray.filter(beer => beer.name.includes(beerName)); //filter only beers from beerArray whose name includes the input string
@@ -222,6 +224,30 @@ app.get('/beer/name/:beerName', function(request, response){
         return;
     }
     response.send(newBeerArray);
+});
+//Scenario 7
+app.get('/sorted', function(request, response){
+    let beerArrayFirstHalf = beerArray.splice(0, Math.floor(beerArray.length / 2))
+        Promise.all(beerArrayFirstHalf)
+        .then(function(result) {
+            return result.sort(function(a, b){
+                return a.name.localeCompare(b.name);
+            });
+    })
+        .then(function(newResult) {
+            return newResult.concat(beerArray);
+        })
+        .then(function(nextResult) {
+            return nextResult.sort(function(a, b){
+                return a.name.localeCompare(b.name);
+            });
+        })
+        .then(function(finalResult) {
+            response.send(finalResult);
+        })
+        .catch(function(err){
+            response.status(404).send(err);
+        });
 });
 
 app.listen(app.get('port'), function() {
