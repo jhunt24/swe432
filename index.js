@@ -1,5 +1,6 @@
 let express = require('express');
 let app = express();
+let fetch = require('node-fetch');
 
 app.set('port', (process.env.PORT || 5000));
 
@@ -38,10 +39,8 @@ class Beer {//Beer class
 }
 let beerArray = [];//store Beer class here
 
-let fetch = require('node-fetch');
 
-fetch('https://api.punkapi.com/v2/beers?page=1&per_page=80')//api seems to limit 80 per call,
-// can do a 2nd fetch if it needs to be larger
+fetch('https://api.punkapi.com/v2/beers?page=1&per_page=40')//first 40 beers
     .then(function(res) {
         return res.json();
     }).then(function(json) {
@@ -53,6 +52,32 @@ fetch('https://api.punkapi.com/v2/beers?page=1&per_page=80')//api seems to limit
         beerArray[i] = new Beer(json[i].name, json[i].id, json[i].abv, json[i].ibu, newHops);
     }
 });
+
+function secondFetch() {
+    fetch('https://api.punkapi.com/v2/beers?page=2&per_page=40')//second 40 beers
+        .then(function(res) {
+            return res.json();
+        }).then(function(json) {
+        for(let i = 0; i<json.length; i++){
+            let newHops = [];
+            for(let h in json[i].ingredients.hops){
+                newHops[h] = new Hop(json[i].ingredients.hops[h].name, json[i].ingredients.hops[h].attribute);
+                console.log(newHops[h]);
+            }
+            let newI = i+40;
+            beerArray[newI] = new Beer(json[i].name, json[i].id, json[i].abv, json[i].ibu, newHops);
+        }
+    });
+}
+setTimeout(secondFetch, 500);
+
+//For Testing
+//console.log("first fetch should be done" + Date.now());
+//function waittoprint() {
+//    console.log(beerArray);
+//}
+//setTimeout(waittoprint, 4000);
+
 
 app.get('/', function(request, response) {
     response.send(beerArray)
