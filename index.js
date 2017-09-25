@@ -39,20 +39,25 @@ class Beer {//Beer class
 }
 let beerArray = [];//store Beer class here
 
+function errorHandler(response) {
+  return response.json()
+    .then(json => {
+      if (response.ok) {
+        return json
+      } else {
+        return Promise.reject(json)
+      }
+    });
+}
 function badFetch() {
     fetch('https://thisisnotarealurl.net')
+    .then(errorHandler)
     .then(function(response) {
-        if(!response.ok){
-            console.log("Error time");
-            throw Error(response);
-        }
-        return response;
-    }).then(function(response){
-        console.log("Okay");
+        console.log(response);
     })
     .catch(function(err) {
         console.log('Error is: ' + err); //Prints to console ~20 seconds after starting up
-    })
+    });
 }
 
 function firstFetch() {
