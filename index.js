@@ -60,7 +60,12 @@ function badFetch() {
         console.log(response);
     })
     .catch(function(err) {
-        console.log('Error: ' + err.code + ' --- ' + err.statusText);
+
+        if(err.code === 'ENOTFOUND'){
+            console.log('Internet Error: ' + err);
+        }
+        else
+            console.log('Error: ' + err.status + ' --- ' + err.statusText);
     });
 }
 
