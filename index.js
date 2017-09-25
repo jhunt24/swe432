@@ -39,21 +39,20 @@ class Beer {//Beer class
 }
 let beerArray = [];//store Beer class here
 
-
-fetch('https://api.punkapi.com/v2/beers?page=1&per_page=40')//first 40 beers
-    .then(function (res) {
-        return res.json();
-    }).then(function (json) {
-    for (let i in json) {
-        let newHops = [];
-        for (let h in json[i].ingredients.hops) {
-            newHops[h] = new Hop(json[i].ingredients.hops[h].name, json[i].ingredients.hops[h].attribute);
+function firstFetch() {
+    fetch('https://api.punkapi.com/v2/beers?page=1&per_page=40')//first 40 beers
+        .then(function (res) {
+            return res.json();
+        }).then(function (json) {
+        for (let i in json) {
+            let newHops = [];
+            for (let h in json[i].ingredients.hops) {
+                newHops[h] = new Hop(json[i].ingredients.hops[h].name, json[i].ingredients.hops[h].attribute);
+            }
+            beerArray[i] = new Beer(json[i].name, json[i].id, json[i].abv, json[i].ibu, newHops);
         }
-        beerArray[i] = new Beer(json[i].name, json[i].id, json[i].abv, json[i].ibu, newHops);
-    }
-
-});
-
+    });
+}
 
 function secondFetch() {
     fetch('https://api.punkapi.com/v2/beers?page=2&per_page=40')//second 40 beers
@@ -76,7 +75,17 @@ function secondFetch() {
             }
         });
 }
-setTimeout(secondFetch, 500);
+function delay(t) {
+    return new Promise(function(resolve) {
+        setTimeout(resolve, t)
+    });
+}
+seq = Promise.resolve();
+seq = seq.then(firstFetch)
+    .then(delay(500))
+    .then(secondFetch);
+seq;
+
 
 //For Testing
 //console.log("first fetch should be done" + Date.now());
