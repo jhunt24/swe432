@@ -39,6 +39,27 @@ class Beer {//Beer class
 }
 let beerArray = [];//store Beer class here
 
+function errorHandler(response) {
+    return response.json()
+        .then(json => {
+            if (response.ok) {
+                return json
+            } else {
+                return Promise.reject(json)
+            }
+        });
+}
+function badFetch() {
+    fetch('https://api.punkapi.com/v2/beersss?page=1&per_page=40')
+        .then(errorHandler)
+        .then(function(response) {
+            console.log(response);
+        })
+        .catch(function(err) {
+            console.log('Error is: ' + err.statusCode);
+        });
+}
+
 function firstFetch() {
     fetch('https://api.punkapi.com/v2/beers?page=1&per_page=40')//first 40 beers
         .then(function (res) {
@@ -68,7 +89,7 @@ function secondFetch() {
             let newHops = [];
             for(let h in json[i].ingredients.hops){
                 newHops[h] = new Hop(json[i].ingredients.hops[h].name, json[i].ingredients.hops[h].attribute);
-                console.log(newHops[h]);
+                //console.log(newHops[h]);
             }
             let newI = i+40;
             beerArray[newI] = new Beer(json[i].name, json[i].id, json[i].abv, json[i].ibu, newHops);
@@ -86,7 +107,9 @@ function delay(t) {
     });
 }
 seq = Promise.resolve();
-seq = seq.then(firstFetch)
+seq = seq.then(badFetch)
+    .then(delay(500))
+    .then(firstFetch)
     .then(delay(500))
     .then(secondFetch);
 seq;
