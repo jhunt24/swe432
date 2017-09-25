@@ -60,6 +60,9 @@ function badFetch() {
         console.log(response);
     })
     .catch(function(err) {
+        if(err.code === ENOTFOUND){
+            console.log('Internet Error: ' + err.code);
+        }
         console.log('Error: ' + err.status + ' --- ' + err.statusText);
     });
 }
