@@ -40,24 +40,19 @@ class Beer {//Beer class
 let beerArray = [];//store Beer class here
 
 
-    fetch('https://api.punkapi.com/v2/beers?page=1&per_page=40')//first 40 beers
-        .then(function (res) {
-            return res.json();
-        }).then(function (json) {
-        for (let i in json) {
-            let newHops = [];
-            for (let h in json[i].ingredients.hops) {
-                newHops[h] = new Hop(json[i].ingredients.hops[h].name, json[i].ingredients.hops[h].attribute);
-            }
-            beerArray[i] = new Beer(json[i].name, json[i].id, json[i].abv, json[i].ibu, newHops);
+fetch('https://api.punkapi.com/v2/beers?page=1&per_page=40')//first 40 beers
+    .then(function (res) {
+        return res.json();
+    }).then(function (json) {
+    for (let i in json) {
+        let newHops = [];
+        for (let h in json[i].ingredients.hops) {
+            newHops[h] = new Hop(json[i].ingredients.hops[h].name, json[i].ingredients.hops[h].attribute);
         }
+        beerArray[i] = new Beer(json[i].name, json[i].id, json[i].abv, json[i].ibu, newHops);
+    }
 
-    })
-        .catch(function (err) {
-            if (err.statusCode === 504) {
-                return firstFetch();
-            }
-        });
+});
 
 
 function secondFetch() {
@@ -76,8 +71,8 @@ function secondFetch() {
         }
     })
         .catch(function (err) {
-            if (err.statusCode === 504) {
-                return secondFetch();
+            if (err.statusCode === 504) {//gateway timeout
+                return setTimeout(secondFetch, 500);
             }
         });
 }
@@ -280,9 +275,10 @@ app.get('/sorted', function(request, response){
             });
         })
         .then(function(finalResult) {
+            beerArray = finalResult;
             response.send(finalResult);//send result
         })
-        .catch(function(err){
+        .catch(function(err){//catch error and send message
             response.status(404).send(err);
         });
 });
