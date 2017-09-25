@@ -60,7 +60,7 @@ function badFetch() {
         console.log(response);
     })
     .catch(function(err) {
-        console.log('Error: ' + err.status + ' --- ' + err.statusText);
+        console.log('Error: ' + err.code + ' --- ' + err.statusText);
     });
 }
 
