@@ -45,7 +45,11 @@ function errorHandler(response) {
       if (response.ok) {
         return json
       } else {
-        return Promise.reject(json)
+        let error = Object.assign({}, json, {
+        status: response.status,
+        statusText: response.statusText
+        })
+        return Promise.reject(error)
       }
     });
 }
@@ -56,7 +60,7 @@ function badFetch() {
         console.log(response);
     })
     .catch(function(err) {
-        console.log('Error is: ' + err.statusCode);
+        console.log('Error is: ' + err.status + ' and ' + err.statusText);
     });
 }
 
