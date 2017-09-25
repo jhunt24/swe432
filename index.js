@@ -40,24 +40,28 @@ class Beer {//Beer class
 let beerArray = [];//store Beer class here
 
 function errorHandler(response) {
-    return response.json()
-        .then(json => {
-            if (response.ok) {
-                return json
-            } else {
-                return Promise.reject(json)
-            }
-        });
+  return response.json()
+    .then(json => {
+      if (response.ok) {
+        return json
+      } else {
+        let error = Object.assign({}, json, {
+        status: response.status,
+        statusText: response.statusText
+        })
+        return Promise.reject(error)
+      }
+    });
 }
 function badFetch() {
     fetch('https://api.punkapi.com/v2/beersss?page=1&per_page=40')
-        .then(errorHandler)
-        .then(function(response) {
-            console.log(response);
-        })
-        .catch(function(err) {
-            console.log('Error is: ' + err.statusCode);
-        });
+    .then(errorHandler)
+    .then(function(response) {
+        console.log(response);
+    })
+    .catch(function(err) {
+        console.log('Error: ' + err.status + ' --- ' + err.statusText);
+    });
 }
 
 function firstFetch() {
