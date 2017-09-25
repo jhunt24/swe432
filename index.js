@@ -18,7 +18,7 @@ app.set('port', (process.env.PORT || 5000));
 6. Get a list of beers that match the supplied name
     GET /beer/name/:beerName
 7. Get a sort list of beers currently stored
-    GET /beer/sorted
+    GET /sorted
  */
 
 class Hop {
@@ -40,18 +40,25 @@ class Beer {//Beer class
 let beerArray = [];//store Beer class here
 
 
-fetch('https://api.punkapi.com/v2/beers?page=1&per_page=40')//first 40 beers
-    .then(function(res) {
-        return res.json();
-    }).then(function(json) {
-    for(let i in json){
-        let newHops = [];
-        for(let h in json[i].ingredients.hops){
-            newHops[h] = new Hop(json[i].ingredients.hops[h].name, json[i].ingredients.hops[h].attribute);
+    fetch('https://api.punkapi.com/v2/beers?page=1&per_page=40')//first 40 beers
+        .then(function (res) {
+            return res.json();
+        }).then(function (json) {
+        for (let i in json) {
+            let newHops = [];
+            for (let h in json[i].ingredients.hops) {
+                newHops[h] = new Hop(json[i].ingredients.hops[h].name, json[i].ingredients.hops[h].attribute);
+            }
+            beerArray[i] = new Beer(json[i].name, json[i].id, json[i].abv, json[i].ibu, newHops);
         }
-        beerArray[i] = new Beer(json[i].name, json[i].id, json[i].abv, json[i].ibu, newHops);
-    }
-});
+
+    })
+        .catch(function (err) {
+            if (err.statusCode === 504) {
+                return firstFetch();
+            }
+        });
+
 
 function secondFetch() {
     fetch('https://api.punkapi.com/v2/beers?page=2&per_page=40')//second 40 beers
@@ -67,7 +74,12 @@ function secondFetch() {
             let newI = i+40;
             beerArray[newI] = new Beer(json[i].name, json[i].id, json[i].abv, json[i].ibu, newHops);
         }
-    });
+    })
+        .catch(function (err) {
+            if (err.statusCode === 504) {
+                return secondFetch();
+            }
+        });
 }
 setTimeout(secondFetch, 500);
 
@@ -252,23 +264,23 @@ app.get('/beer/name/:beerName', function(request, response){
 });
 //Scenario 7
 app.get('/sorted', function(request, response){
-    let beerArrayFirstHalf = beerArray.splice(0, Math.floor(beerArray.length / 2))
-        Promise.all(beerArrayFirstHalf)
+    let beerArrayFirstHalf = beerArray.splice(0, Math.floor(beerArray.length / 2))//cut array in half
+    Promise.all(beerArrayFirstHalf)
         .then(function(result) {
-            return result.sort(function(a, b){
+            return result.sort(function(a, b){//sort first half of array based on beer name
                 return a.name.localeCompare(b.name);
             });
-    })
+        })
         .then(function(newResult) {
-            return newResult.concat(beerArray);
+            return newResult.concat(beerArray);//reconnect array
         })
         .then(function(nextResult) {
-            return nextResult.sort(function(a, b){
+            return nextResult.sort(function(a, b){//sort the rest of the array
                 return a.name.localeCompare(b.name);
             });
         })
         .then(function(finalResult) {
-            response.send(finalResult);
+            response.send(finalResult);//send result
         })
         .catch(function(err){
             response.status(404).send(err);
