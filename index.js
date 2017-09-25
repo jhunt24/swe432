@@ -51,7 +51,12 @@ function firstFetch() {
             }
             beerArray[i] = new Beer(json[i].name, json[i].id, json[i].abv, json[i].ibu, newHops);
         }
-    });
+    })
+        .catch(function (err) {
+            if (err.statusCode === 504) {//gateway timeout
+                return setTimeout(firstFetch, 500);
+            }
+        });
 }
 
 function secondFetch() {
