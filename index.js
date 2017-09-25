@@ -50,13 +50,13 @@ function errorHandler(response) {
     });
 }
 function badFetch() {
-    fetch('https://thisisnotarealurl.net')
+    fetch('https://api.punkapi.com/v2/beersss?page=1&per_page=40')
     .then(errorHandler)
     .then(function(response) {
         console.log(response);
     })
     .catch(function(err) {
-        console.log('Error is: ' + err); //Prints to console ~20 seconds after starting up
+        console.log('Error is: ' + err.statusCode);
     });
 }
 
