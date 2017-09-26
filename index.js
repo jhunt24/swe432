@@ -53,7 +53,7 @@ function errorHandler(response) {
       }
     });
 }
-function badFetch() {
+function badFetch() {//test that fetching from wrong url gives 404 not found and no internet gives ENOTFOUND
     fetch('https://api.punkapi.com/v2/beersss?page=1&per_page=40')
     .then(errorHandler)
     .then(function(response) {
@@ -61,12 +61,33 @@ function badFetch() {
     })
     .catch(function(err) {
 
-        if(err.code === 'ENOTFOUND'){
+        if(err.code === 'ENOTFOUND'){//no internet connection
             console.log('Internet Error: ' + err);
         }
-        else
+        else {//flags 404 and any other client error
             console.log('Error: ' + err.status + ' --- ' + err.statusText);
+            setTimeout(firstFetch, 5000);
+        }
     });
+}
+function invalidKeyFetch() {//test that fetching invalid data throws error
+    fetch('http://apiv3.iucnredlist.org/api/v3/country/list?token=123notgonnawork123')
+        .then(function (res) {
+            return res.json();
+        }).then(function (json) {
+        for (let i in json) {
+            let newHops = [];
+            for (let h in json[i].ingredients.hops) {
+                newHops[h] = new Hop(json[i].ingredients.hops[h].name, json[i].ingredients.hops[h].attribute);
+            }
+            beerArray[i] = new Beer(json[i].name, json[i].id, json[i].abv, json[i].ibu, newHops);
+        }
+    })
+        .catch(function (err) {
+            if (err.name === 'TypeError') {//gateway timeout
+                console.log("Type Error, bad data");
+            }
+        });
 }
 
 function firstFetch() {
@@ -83,8 +104,16 @@ function firstFetch() {
         }
     })
         .catch(function (err) {
-            if (err.statusCode === 504) {//gateway timeout
-                return setTimeout(firstFetch, 500);
+            if(err.code === 'ENOTFOUND'){//no internet connection
+                console.log('Internet Error: ' + err);
+                setTimeout(firstFetch, 5000);
+            }
+            if (err.name === 'TypeError') {//gateway timeout
+                console.log("Type Error, bad data");
+            }
+            else {//flags 404 and any other client error
+                console.log('Error: ' + err.status + ' --- ' + err.statusText);
+                setTimeout(firstFetch, 5000);
             }
         });
 }
@@ -105,8 +134,16 @@ function secondFetch() {
         }
     })
         .catch(function (err) {
-            if (err.statusCode === 504) {//gateway timeout
-                return setTimeout(secondFetch, 500);
+            if(err.code === 'ENOTFOUND'){//no internet connection
+                console.log('Internet Error: ' + err);
+                setTimeout(secondFetch, 5000);
+            }
+            if (err.name === 'TypeError') {//gateway timeout
+                console.log("Type Error, bad data");
+            }
+            else {//flags 404 and any other client error
+                console.log('Error: ' + err.status + ' --- ' + err.statusText);
+                setTimeout(secondFetch, 5000);
             }
         });
 }
@@ -116,21 +153,11 @@ function delay(t) {
     });
 }
 seq = Promise.resolve();
-seq = seq.then(badFetch)
+seq = seq.then(badFetch)//sequences fetch order, badFetch will call firstFetch on failure
     .then(delay(500))
-    .then(firstFetch)
+    .then(secondFetch)
     .then(delay(500))
-    .then(secondFetch);
-seq;
-
-
-//For Testing
-//console.log("first fetch should be done" + Date.now());
-//function waittoprint() {
-//    console.log(beerArray);
-//}
-//setTimeout(waittoprint, 4000);
-
+    .then(invalidKeyFetch);
 
 app.get('/', function(request, response) {
     response.send(beerArray)
